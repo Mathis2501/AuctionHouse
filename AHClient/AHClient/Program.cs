@@ -12,6 +12,8 @@ namespace AHClient
 {
     class Program
     {
+        static int nytBud;
+        static int højestBud;
         static void Main(string[] args)
         {
             TcpListener serverSocket = new TcpListener(IPAddress.Any, 20000);
@@ -75,17 +77,23 @@ namespace AHClient
                                           " I am connected on port number " + localIpEndPoint.Port);
                     }
 
-                    if (reader.ReadLine().ToLower() == "hello server")
-                    {
-                        writer.WriteLine("Hello, Client!");
+                    if (reader.ReadLin
                     }
 
 
                     while (clientSocket.Client.Connected)
                     {
-                        Console.WriteLine(reader.ReadLine());
+                      højestBud = Convert.ToInt32(reader.ReadLine());
+                        if(nytBud > højestBud)
+                        {
+                            writer.WriteLine(nytBud);
+                            Console.WriteLine("Du har budt" + nytBud);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Dit bud var ikke gyldigt");
+                        }
                     }
-
 
                 }
             }
