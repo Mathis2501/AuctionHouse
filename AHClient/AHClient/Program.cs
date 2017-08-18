@@ -14,81 +14,28 @@ namespace AHClient
     {
         static void Main(string[] args)
         {
-            TcpListener serverSocket = new TcpListener(IPAddress.Any, 20000);
-            TcpClient clientSocket = default(TcpClient);
-            int counter = 0;
 
-            serverSocket.Start();
-            Console.WriteLine(" >> Server Started");
+            TcpClient client = new TcpClient();
+            Console.WriteLine("Connecting...");
 
-            while (true)
-            {
-                counter += 1;
-                clientSocket = serverSocket.AcceptTcpClient();
-                Console.WriteLine(" >> Client No: " + counter + " Started!");
-                HandleClient client = new HandleClient();
-                client.StartClient(clientSocket, counter);
-            }
+            client.Connect("localhost", 20000);
 
-            clientSocket.Close();
-            serverSocket.Stop();
-            Console.WriteLine(" >> " + "exit");
+            Console.Clear();
+            Console.WriteLine("Connected");
+
+            NetworkStream stream = client.GetStream();
+            StreamReader reader = new StreamReader(stream);
+            StreamWriter writer = new StreamWriter(stream);
+            writer.AutoFlush = true;
+
+            writer.WriteLine("hello server");
+            Console.WriteLine(reader.ReadLine());
+
             Console.ReadLine();
-        }
 
-        public class HandleClient
-        {
-            private TcpClient clientSocket;
-            private string clNo;
+            client.Close();
 
-            internal void StartClient(TcpClient inClientSocket, int clientNo)
-            {
-                this.clientSocket = inClientSocket;
-                clNo = clientNo.ToString();
-                Thread newThread = new Thread(ClientHandler);
-                newThread.Start();
-
-            }
-
-            internal void ClientHandler()
-            {
-                while (true)
-
-                {
-                    IPEndPoint remoteIpEndPoint = clientSocket.Client.RemoteEndPoint as IPEndPoint;
-                    IPEndPoint localIpEndPoint = clientSocket.Client.LocalEndPoint as IPEndPoint;
-
-                    NetworkStream stream = new NetworkStream(clientSocket.Client);
-                    StreamReader reader = new StreamReader(stream);
-                    StreamWriter writer = new StreamWriter(stream);
-                    writer.AutoFlush = true;
-
-                    if (remoteIpEndPoint != null)
-                    {
-                        Console.WriteLine("I am connected to " + remoteIpEndPoint.Address + " on port number " +
-                                          remoteIpEndPoint.Port);
-                    }
-
-                    if (localIpEndPoint != null)
-                    {
-                        Console.WriteLine("My local IpAddress is :" + localIpEndPoint.Address +
-                                          " I am connected on port number " + localIpEndPoint.Port);
-                    }
-
-                    if (reader.ReadLine().ToLower() == "hello server")
-                    {
-                        writer.WriteLine("Hello, Client!");
-                    }
-
-
-                    while (clientSocket.Client.Connected)
-                    {
-                        Console.WriteLine(reader.ReadLine());
-                    }
-
-
-                }
-            }
         }
     }
 }
+
