@@ -12,26 +12,27 @@ namespace AHServer
 {
     class Program
     {
+        
         static void Main(string[] args)
         {
-            TcpListener serverSocket = new TcpListener(IPAddress.Any, 20000);
-            TcpClient clientSocket = default(TcpClient);
+            TcpListener _serverSocket = new TcpListener(IPAddress.Any, 20000);
+            TcpClient _clientSocket = default(TcpClient);
             int counter = 0;
 
-            serverSocket.Start();
+            _serverSocket.Start();
             Console.WriteLine(" >> Server Started");
 
             while (true)
             {
                 counter += 1;
-                clientSocket = serverSocket.AcceptTcpClient();
+                _clientSocket = _serverSocket.AcceptTcpClient();
                 Console.WriteLine(" >> Client No: " + counter + " Started!");
                 HandleClient client = new HandleClient();
-                client.StartClient(clientSocket, counter);
+                client.StartClient(_clientSocket, counter);
             }
 
-            clientSocket.Close();
-            serverSocket.Stop();
+            _clientSocket.Close();
+            _serverSocket.Stop();
             Console.WriteLine(" >> " + "exit");
             Console.ReadLine();
         }
@@ -40,6 +41,8 @@ namespace AHServer
         {
             private TcpClient clientSocket;
             private string clNo;
+            static int _currentBid = 0;
+            static List<int> _previousBids = new List<int>();
 
             internal void StartClient(TcpClient inClientSocket, int clientNo)
             {
@@ -65,28 +68,24 @@ namespace AHServer
 
                     if (remoteIpEndPoint != null)
                     {
-                        Console.WriteLine("I am connected to " + remoteIpEndPoint.Address + " on port number " +
-                                          remoteIpEndPoint.Port);
+                        Console.WriteLine("I am connected to " + remoteIpEndPoint.Address + " on port number " + remoteIpEndPoint.Port);
                     }
 
-                    if (localIpEndPoint != null)
+                    if (clientSocket.Connected)
                     {
-                        Console.WriteLine("My local IpAddress is :" + localIpEndPoint.Address +
-                                          " I am connected on port number " + localIpEndPoint.Port);
+                        writer.WriteLine("What is your name?");
+                        Console.WriteLine(reader.ReadLine());
+                        //Thread.CurrentThread.Name = name;
+                        //Console.WriteLine(Thread.CurrentThread.Name);
+                        writer.WriteLine("You can now bid on a special one of a kind authentic Mcnugget shaped like a Mcnugget");
                     }
-
-                    if (reader.ReadLine().ToLower() == "hello server")
-                    {
-                        writer.WriteLine("Hello, Client!");
-                    }
-
 
                     while (clientSocket.Client.Connected)
                     {
-                        Console.WriteLine(reader.ReadLine());
+                        _currentBid = int.Parse(reader.ReadLine());
                     }
-
-
                 }
             }
+        }
+    }
 }
