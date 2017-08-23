@@ -7,86 +7,98 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable AssignNullToNotNullAttribute
 
 namespace AHServer
 {
     class Program
     {
+
         static void Main(string[] args)
         {
-            TcpListener serverSocket = new TcpListener(IPAddress.Any, 20000);
-            TcpClient clientSocket = default(TcpClient);
+            TcpListener _serverSocket = new TcpListener(IPAddress.Any, 20000);
+            TcpClient _clientSocket = default(TcpClient);
             int counter = 0;
 
-            serverSocket.Start();
+            _serverSocket.Start();
             Console.WriteLine(" >> Server Started");
 
             while (true)
             {
                 counter += 1;
-                clientSocket = serverSocket.AcceptTcpClient();
+                _clientSocket = _serverSocket.AcceptTcpClient();
                 Console.WriteLine(" >> Client No: " + counter + " Started!");
-                HandleClient client = new HandleClient();
-                client.StartClient(clientSocket, counter);
+                HandleClient client = new HandleClient(_clientSocket, counter);
+                client.StartClient();
             }
-
-            clientSocket.Close();
-            serverSocket.Stop();
-            Console.WriteLine(" >> " + "exit");
-            Console.ReadLine();
         }
 
         public class HandleClient
         {
             private TcpClient clientSocket;
             private string clNo;
+            static int _currentBid = 0;
+            static List<int> _previousBids = new List<int>();
 
-            internal void StartClient(TcpClient inClientSocket, int clientNo)
+            internal HandleClient(TcpClient inClientSocket, int clientNo)
             {
                 this.clientSocket = inClientSocket;
                 clNo = clientNo.ToString();
-                Thread newThread = new Thread(ClientHandler);
-                newThread.Start();
+            }
 
+            internal void StartClient()
+            {
+                Thread newClient = new Thread(ClientHandler);
+                newClient.Start();
             }
 
             internal void ClientHandler()
             {
-                while (true)
-
+                try
                 {
-                    IPEndPoint remoteIpEndPoint = clientSocket.Client.RemoteEndPoint as IPEndPoint;
-                    IPEndPoint localIpEndPoint = clientSocket.Client.LocalEndPoint as IPEndPoint;
+                    while (true)
 
-                    NetworkStream stream = new NetworkStream(clientSocket.Client);
-                    StreamReader reader = new StreamReader(stream);
-                    StreamWriter writer = new StreamWriter(stream);
-                    writer.AutoFlush = true;
-
-                    if (remoteIpEndPoint != null)
                     {
-                        Console.WriteLine("I am connected to " + remoteIpEndPoint.Address + " on port number " +
-                                          remoteIpEndPoint.Port);
+                        IPEndPoint remoteIpEndPoint = clientSocket.Client.RemoteEndPoint as IPEndPoint;
+                        IPEndPoint localIpEndPoint = clientSocket.Client.LocalEndPoint as IPEndPoint;
+
+                        NetworkStream stream = new NetworkStream(clientSocket.Client);
+                        StreamReader reader = new StreamReader(stream);
+                        StreamWriter writer = new StreamWriter(stream);
+                        writer.AutoFlush = true;
+
+                        if (remoteIpEndPoint != null)
+                        {
+                            Console.WriteLine("I am connected to " + remoteIpEndPoint.Address + " on port number " +
+                                              remoteIpEndPoint.Port);
+                        }
+
+                        if (clientSocket.Connected)
+                        {
+                            Thread.CurrentThread.Name = reader.ReadLine();
+                            Console.WriteLine(Thread.CurrentThread.Name);
+                            writer.WriteLine("You can now bid on a special one of a kind authentic Mcnugget shaped like a Mcnugget");
+                            while (clientSocket.Connected)
+                            {
+                                int i = int.Parse(reader.ReadLine());
+                                if (i > _currentBid)
+                                {
+                                    _currentBid = i;
+                                    Console.WriteLine(i + " is the highest");
+                                }
+                                else
+                                {
+                                    writer.WriteLine(_currentBid.ToString());
+                                }
+                            }
+                        }
                     }
-
-                    if (localIpEndPoint != null)
-                    {
-                        Console.WriteLine("My local IpAddress is :" + localIpEndPoint.Address +
-                                          " I am connected on port number " + localIpEndPoint.Port);
-                    }
-
-                    if (reader.ReadLine().ToLower() == "hello server")
-                    {
-                        writer.WriteLine("Hello, Client!");
-                    }
-
-
-                    while (clientSocket.Client.Connected)
-                    {
-                        Console.WriteLine(reader.ReadLine());
-                    }
-
-
+                }
+                catch (IOException e)
+                {
+                    Console.WriteLine("An IOException occurred: " + e);
                 }
             }
+        }
+    }
 }
