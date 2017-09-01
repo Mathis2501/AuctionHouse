@@ -27,23 +27,25 @@ namespace AHServer
         TcpListener _serverSocket = new TcpListener(IPAddress.Any, 20000);
         TcpClient _clientSocket = default(TcpClient);
         int counter = 0;
-
+        clientList = new List<HandleClient>();
 
         _serverSocket.Start();
         Console.WriteLine(" >> Server Started");
         HandleClient HC = new HandleClient();
         Thread gavelThread = new Thread(HC.Gavel);
-        gavelThread.Start();
 
         while (true)
         {
             counter += 1;
             _clientSocket = _serverSocket.AcceptTcpClient();
             Console.WriteLine(" >> Client No: " + counter + " Started!");
-            HandleClient client = new HandleClient(_clientSocket, counter, clientList);
+            HandleClient client = new HandleClient(_clientSocket, counter);
             client.StartClient();
-                
             clientList.Add(client);
+            if (counter == 1)
+            {
+                gavelThread.Start();
+            }
         }
 }
 
@@ -61,7 +63,7 @@ namespace AHServer
                 
             }
 
-            internal HandleClient(TcpClient inClientSocket, int clientNo, clientlist)
+            internal HandleClient(TcpClient inClientSocket, int clientNo)
             {
                 this.clientSocket = inClientSocket;
                 clNo = clientNo.ToString();
