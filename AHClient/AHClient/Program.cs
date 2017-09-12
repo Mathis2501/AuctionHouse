@@ -29,11 +29,13 @@ namespace AHClient
 
         private void Run()
         {
-            Thread ServerWriter = new Thread(SendingLocalHighestBid);
+            Thread ServerWriter = new Thread(ReadFromServer);
 
 
             Console.WriteLine("Connecting...");
-            client.Connect("10.140.67.214", 20000);
+
+            client.Connect("10.140.67.106", 20000);
+
             Console.Clear();
             Console.WriteLine("Connected");
 
@@ -46,12 +48,12 @@ namespace AHClient
             Console.WriteLine("what is your name: ");
             writer.WriteLine(Console.ReadLine());
 
-            Console.WriteLine(reader.ReadLine());
+
 
             ServerWriter.Start();
             while (client.Connected)
             {
-                
+                Console.WriteLine("Det højeste bud er " + HighestBid);
                 int i;
                 if (int.TryParse(Console.ReadLine(), out i))
                 {
@@ -60,6 +62,8 @@ namespace AHClient
                     {
                         writer.WriteLine(newBid);
                         Console.WriteLine("Du har budt: " + newBid);
+                        HighestBid = newBid;
+                        SendingLocalHighestBid();
                     }
                     else
                     {
@@ -70,7 +74,7 @@ namespace AHClient
                 {
                     Console.WriteLine("Brug tal dummernik");
                 }
-                
+
 
 
             }
@@ -82,20 +86,38 @@ namespace AHClient
 
         public void SendingLocalHighestBid()
         {
-            while (true)
+
+            if (newBid > HighestBid)
             {
-                Thread.Sleep(1000);
-                //Console.WriteLine("update started");
-                writer.WriteLine(HighestBid.ToString());
-                int i = int.Parse(reader.ReadLine());
-                if (HighestBid < i)
-                {
-                    Console.WriteLine("Det højeste bud er: " + i);
-                }
-                HighestBid = i;
-
-
+                writer.WriteLine(newBid);
             }
+        }
+
+        public void ReadFromServer()
+        {
+           
+
+            while (client.Connected)
+            {
+                var msg = reader.ReadLine();
+                Thread.Sleep(10);
+           
+                int i;
+
+                if (int.TryParse(msg, out i))
+                {
+                    if (i > HighestBid)
+                    {
+                        HighestBid = i;
+                        Console.WriteLine("Det højeste bud er nu" + HighestBid);
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(msg))
+                {
+                    Console.WriteLine(msg);
+                }
+            }
+
         }
     }
 }
