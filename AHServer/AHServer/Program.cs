@@ -14,7 +14,7 @@ namespace AHServer
     class Program
     {
 
-        public List<HandleClient> clientList;
+        List<HandleClient> clientList;
 
         static void Main(string[] args)
         {
@@ -31,8 +31,7 @@ namespace AHServer
 
         _serverSocket.Start();
         Console.WriteLine(" >> Server Started");
-        HandleClient HC = new HandleClient();
-        Thread gavelThread = new Thread(HC.Gavel);
+        Thread gavelThread = new Thread(HandleClient.Gavel);
 
         while (true)
         {
@@ -40,8 +39,9 @@ namespace AHServer
             _clientSocket = _serverSocket.AcceptTcpClient();
             Console.WriteLine(" >> Client No: " + counter + " Started!");
             HandleClient client = new HandleClient(_clientSocket, counter);
+            HandleClient._clientList.Add(client);
             client.StartClient();
-            clientList.Add(client);
+            
             if (counter == 1)
             {
                 gavelThread.Start();
@@ -56,7 +56,8 @@ namespace AHServer
             private string clNo;
             static int _currentBid = 0;
             static List<int> _previousBids = new List<int>();
-          
+            public static List<HandleClient> _clientList = new List<HandleClient>();
+
 
             internal HandleClient()
             {
@@ -67,28 +68,29 @@ namespace AHServer
             {
                 this.clientSocket = inClientSocket;
                 clNo = clientNo.ToString();
-                
             }
 
-            public void Gavel()
+            public static void Gavel()
             {
-                Program myProgram = new Program();
-                
                 for ( int i = 30; i > 0; i--)
                 {
                     if (newHighestBid)
                     {
                         i = 30;
-                        foreach (var item in myProgram.clientList)
+                        foreach (var item in _clientList)
                         {
                             item.GavelMessage(i);
                         }
                         newHighestBid = false;
                     }
-                    foreach (var item in myProgram.clientList)
+                    if (i == 5 || i == 3 || i == 1)
                     {
-                        item.GavelMessage(i);
+                        foreach (var item in _clientList)
+                        {
+                            item.GavelMessage(i);
+                        }
                     }
+                    
                         
                     Thread.Sleep(1000);
 
@@ -158,12 +160,13 @@ namespace AHServer
                                 if (i > _currentBid)
                                 {
                                     newHighestBid = true;
+                                    _previousBids.Add(_currentBid);
                                     _currentBid = i;
                                     Console.WriteLine(i + " is the highest bid ");
                                 }
                                 else
                                 {
-                                    writer.WriteLine(_currentBid.ToString() + " is the highest bid");
+                                    writer.WriteLine(_currentBid);
                                 }
                             }
                         }
