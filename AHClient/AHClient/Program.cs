@@ -33,7 +33,9 @@ namespace AHClient
 
 
             Console.WriteLine("Connecting...");
+
             client.Connect("10.140.67.106", 20000);
+
             Console.Clear();
             Console.WriteLine("Connected");
 
