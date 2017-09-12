@@ -152,19 +152,21 @@ namespace AHServer
                             while (clientSocket.Connected)
                             {
                                 int i = int.Parse(reader.ReadLine());
+                                Monitor.Enter(_lock);
                                 if (i > _currentBid)
                                 {
-                                    Monitor.Enter(_lock);
+                                    
                                         newHighestBid = true;
                                         _previousBids.Add(_currentBid);
                                         _currentBid = i;
                                         Console.WriteLine(i + " is the highest bid ");
-                                    Monitor.Exit(_lock);
+                                    
                                 }
                                 else
                                 {
                                     writer.WriteLine(_currentBid);
                                 }
+                                Monitor.Exit(_lock);
                             }
                         }
                     }
