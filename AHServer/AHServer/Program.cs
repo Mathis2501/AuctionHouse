@@ -65,6 +65,11 @@ namespace AHServer
                 this.clientSocket = inClientSocket;
                 clNo = clientNo.ToString();
             }
+            internal void StartClient()
+            {
+                Thread newClient = new Thread(ClientHandler);
+                newClient.Start();
+            }
 
             public static void Gavel()
             {
@@ -91,12 +96,6 @@ namespace AHServer
                     Thread.Sleep(1000);
 
                 }
-            }
-
-            internal void StartClient()
-            {
-                Thread newClient = new Thread(ClientHandler);
-                newClient.Start();
             }
 
             internal void GavelMessage(int i)
