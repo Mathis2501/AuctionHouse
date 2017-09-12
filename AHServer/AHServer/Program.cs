@@ -57,12 +57,8 @@ namespace AHServer
             static int _currentBid = 0;
             static List<int> _previousBids = new List<int>();
             public static List<HandleClient> _clientList = new List<HandleClient>();
-
-
-            internal HandleClient()
-            {
-                
-            }
+            private object _lock;
+            
 
             internal HandleClient(TcpClient inClientSocket, int clientNo)
             {
@@ -159,10 +155,12 @@ namespace AHServer
                                 int i = int.Parse(reader.ReadLine());
                                 if (i > _currentBid)
                                 {
-                                    newHighestBid = true;
-                                    _previousBids.Add(_currentBid);
-                                    _currentBid = i;
-                                    Console.WriteLine(i + " is the highest bid ");
+                                    Monitor.Enter(_lock);
+                                        newHighestBid = true;
+                                        _previousBids.Add(_currentBid);
+                                        _currentBid = i;
+                                        Console.WriteLine(i + " is the highest bid ");
+                                    Monitor.Exit(_lock);
                                 }
                                 else
                                 {
